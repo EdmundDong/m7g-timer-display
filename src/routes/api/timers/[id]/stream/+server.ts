@@ -20,6 +20,8 @@ export const GET: RequestHandler = ({params, request}) => {
         if (evt.type === 'deleted') {
           send('deleted', {});
           controller.close();
+          unsubscribe?.();
+          clearInterval(heartbeat);
         } else {
           send('snapshot', evt.timer);
         }

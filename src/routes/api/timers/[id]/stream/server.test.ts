@@ -64,4 +64,22 @@ describe('GET /api/timers/[id]/stream', () => {
     const next = await reader.read();
     expect(next.done).toBe(true);
   });
+
+  test('heartbeat does not crash after the stream closes on delete', async () => {
+    vi.useFakeTimers();
+    try {
+      const t = store.createTimer({name: 'A', durationSec: 30});
+      const res = await GET(fakeGetEvent(t.id));
+      const reader = res.body!.getReader();
+      await reader.read(); // initial snapshot
+
+      store.deleteTimer(t.id);
+      await reader.read(); // deleted event
+      await reader.read(); // stream closed (done: true)
+
+      expect(() => vi.advanceTimersByTime(15001)).not.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
