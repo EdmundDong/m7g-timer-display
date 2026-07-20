@@ -123,8 +123,50 @@
     return `${origin}/source/${id}`;
   }
 
+  let copiedId = $state<string | null>(null);
+
+  function fallbackCopy(text: string): boolean {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    // stay in-flow (not display:none) so execCommand can select it, but invisible
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    let ok: boolean;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+    document.body.removeChild(textarea);
+    return ok;
+  }
+
   async function copyUrl(id: string) {
-    await navigator.clipboard.writeText(sourceUrl(id));
+    const url = sourceUrl(id);
+    let ok: boolean;
+    // navigator.clipboard requires a secure context (HTTPS, or literally "localhost") -
+    // hosting over plain HTTP on a LAN IP makes it unavailable, so fall back.
+    if (typeof navigator.clipboard?.writeText === 'function' && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        ok = true;
+      } catch {
+        ok = fallbackCopy(url);
+      }
+    } else {
+      ok = fallbackCopy(url);
+    }
+    if (ok) {
+      copiedId = id;
+      setTimeout(() => {
+        if (copiedId === id) copiedId = null;
+      }, 1500);
+    }
   }
 
   const statusColor: Record<TimerState['status'], string> = {
@@ -225,7 +267,9 @@
 
         <div class="source-url">
           <input readonly value={sourceUrl(t.id)} onclick={(e) => e.currentTarget.select()} />
-          <button class="ghost" onclick={() => copyUrl(t.id)}>Copy</button>
+          <button class="ghost" onclick={() => copyUrl(t.id)}
+            >{copiedId === t.id ? 'Copied!' : 'Copy'}</button
+          >
         </div>
 
         {#if editingId === t.id}
