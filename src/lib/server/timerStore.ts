@@ -23,6 +23,38 @@ function require(id: string): TimerState {
   return t;
 }
 
+const AUTO_CREATE_DEFAULT_DURATION_SEC = 60;
+
+function titleCaseFromId(id: string): string {
+  return id.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Used by the action endpoints (start/pause/resume/reset/add-minute/remove-minute/patch) so an
+ * external controller (e.g. Bitfocus Companion) can drive a timer by id without the operator
+ * having created it first - the id becomes whatever the controller sent, verbatim.
+ */
+function requireOrCreate(id: string): TimerState {
+  const existing = timers.get(id);
+  if (existing) return existing;
+
+  const timer: TimerState = {
+    id,
+    name: titleCaseFromId(id),
+    durationSec: AUTO_CREATE_DEFAULT_DURATION_SEC,
+    redZoneSec: 10,
+    disappearSec: 10,
+    erodeFrom: 'left',
+    mirror: false,
+    status: 'idle',
+    startEpochMs: null,
+    pausedRemainingSec: null,
+  };
+  timers.set(id, timer);
+  notifyGlobal();
+  return timer;
+}
+
 /** Lowest "TimerN" whose slug isn't already in use as another timer's id, so deleted numbers get reused. */
 function nextAutoName(excludeId?: string): string {
   let n = 1;
@@ -71,7 +103,7 @@ export function createTimer(input: CreateTimerInput): TimerState {
 }
 
 export function patchTimer(id: string, patch: PatchTimerInput): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   const merged = {
     name: patch.name !== undefined ? resolveName(patch.name, id) : t.name,
     durationSec: patch.durationSec ?? t.durationSec,
@@ -94,7 +126,7 @@ export function patchTimer(id: string, patch: PatchTimerInput): TimerState {
 }
 
 export function adjustDuration(id: string, deltaSec: number): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   const newRemaining = computeRemainingSec(t, Date.now()) + deltaSec;
   if (newRemaining <= 0) {
     throw new ConflictError('cannot reduce timer to 0 or below');
@@ -121,7 +153,7 @@ export function deleteTimer(id: string): void {
 }
 
 export function startTimer(id: string): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   if (t.status === 'running') {
     throw new ConflictError('timer is already running');
   }
@@ -134,7 +166,7 @@ export function startTimer(id: string): TimerState {
 }
 
 export function pauseTimer(id: string): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   if (t.status !== 'running') {
     throw new ConflictError('timer is not running');
   }
@@ -147,7 +179,7 @@ export function pauseTimer(id: string): TimerState {
 }
 
 export function resumeTimer(id: string): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   if (t.status !== 'paused') {
     throw new ConflictError('timer is not paused');
   }
@@ -161,7 +193,7 @@ export function resumeTimer(id: string): TimerState {
 }
 
 export function resetTimer(id: string): TimerState {
-  const t = require(id);
+  const t = requireOrCreate(id);
   clearEndTransition(id);
   t.status = 'idle';
   t.startEpochMs = null;

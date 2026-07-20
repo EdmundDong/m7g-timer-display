@@ -150,8 +150,8 @@ describe('startTimer', () => {
     expect(restarted.startEpochMs).toBe(Date.now());
   });
 
-  test('starting unknown id throws NotFoundError', () => {
-    expect(() => store.startTimer('nope')).toThrow(NotFoundError);
+  test('starting unknown id auto-creates it instead of throwing', () => {
+    expect(() => store.startTimer('nope')).not.toThrow();
   });
 });
 
@@ -323,8 +323,8 @@ describe('patchTimer', () => {
     expect(patched.pausedRemainingSec).toBe(30);
   });
 
-  test('patching unknown id throws NotFoundError', () => {
-    expect(() => store.patchTimer('nope', {name: 'x'})).toThrow(NotFoundError);
+  test('patching unknown id auto-creates it instead of throwing', () => {
+    expect(() => store.patchTimer('nope', {name: 'x'})).not.toThrow();
   });
 });
 
@@ -386,8 +386,8 @@ describe('adjustDuration', () => {
     expect(() => store.adjustDuration(t.id, -60)).toThrow(ConflictError);
   });
 
-  test('adjusting unknown id throws NotFoundError', () => {
-    expect(() => store.adjustDuration('nope', 60)).toThrow(NotFoundError);
+  test('adjusting unknown id auto-creates it instead of throwing', () => {
+    expect(() => store.adjustDuration('nope', 60)).not.toThrow();
   });
 });
 
@@ -478,5 +478,67 @@ describe('subscriptions', () => {
     expect(lists).toHaveLength(1);
     expect(lists[0]).toHaveLength(1);
     unsubscribe();
+  });
+});
+
+describe('auto-create on unknown id (for external controllers like Bitfocus Companion)', () => {
+  test('startTimer auto-creates an unknown id with defaults, then starts it', () => {
+    const t = store.startTimer('lower-third-1');
+    expect(t.id).toBe('lower-third-1');
+    expect(t.durationSec).toBe(60);
+    expect(t.redZoneSec).toBe(10);
+    expect(t.disappearSec).toBe(10);
+    expect(t.status).toBe('running');
+  });
+
+  test('auto-created name is a title-cased version of the id', () => {
+    const t = store.startTimer('lower-third-1');
+    expect(t.name).toBe('Lower Third 1');
+  });
+
+  test('auto-created timer is retrievable afterward via getOne', () => {
+    store.startTimer('lower-third-1');
+    expect(store.getOne('lower-third-1')?.id).toBe('lower-third-1');
+  });
+
+  test('patchTimer on an unknown id auto-creates it and applies the patch', () => {
+    const t = store.patchTimer('countdown-a', {durationSec: 120, redZoneSec: 20});
+    expect(t.id).toBe('countdown-a');
+    expect(t.durationSec).toBe(120);
+    expect(t.redZoneSec).toBe(20);
+  });
+
+  test('resetTimer on an unknown id auto-creates it (idle, a no-op reset)', () => {
+    const t = store.resetTimer('brand-new');
+    expect(t.id).toBe('brand-new');
+    expect(t.status).toBe('idle');
+  });
+
+  test('adjustDuration on an unknown id auto-creates it before adjusting', () => {
+    const t = store.adjustDuration('brand-new-2', 60);
+    expect(t.id).toBe('brand-new-2');
+    expect(t.durationSec).toBe(120);
+  });
+
+  test('pauseTimer on an unknown id auto-creates it, but still 409s (idle, not running)', () => {
+    expect(() => store.pauseTimer('never-started')).toThrow(ConflictError);
+    expect(store.getOne('never-started')).toBeDefined();
+  });
+
+  test('resumeTimer on an unknown id auto-creates it, but still 409s (idle, not paused)', () => {
+    expect(() => store.resumeTimer('never-started-2')).toThrow(ConflictError);
+    expect(store.getOne('never-started-2')).toBeDefined();
+  });
+
+  test('deleteTimer on an unknown id is NOT auto-create - still throws NotFoundError', () => {
+    expect(() => store.deleteTimer('does-not-exist')).toThrow(NotFoundError);
+    expect(store.getOne('does-not-exist')).toBeUndefined();
+  });
+
+  test('an already-existing timer is reused, not recreated, by the action endpoints', () => {
+    const original = store.createTimer({name: 'Existing', durationSec: 45});
+    const t = store.startTimer(original.id);
+    expect(t.name).toBe('Existing');
+    expect(t.durationSec).toBe(45);
   });
 });

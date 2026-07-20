@@ -30,10 +30,11 @@ describe('PATCH /api/timers/[id]', () => {
     expect((await readJson<TimerState>(res)).name).toBe('B');
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id and applies the patch (200)', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await PATCH({params: {id: 'nope'}, request: patchRequest({name: 'B'})});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect((await readJson<TimerState>(res)).name).toBe('B');
   });
 
   test('updates a running timer (settings editable while running)', async () => {

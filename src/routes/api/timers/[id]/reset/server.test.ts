@@ -22,9 +22,10 @@ describe('POST /api/timers/[id]/reset', () => {
     expect((await readJson<TimerState>(res)).status).toBe('idle');
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id (idle, a no-op reset)', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await POST({params: {id: 'nope'}});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect((await readJson<TimerState>(res)).status).toBe('idle');
   });
 });

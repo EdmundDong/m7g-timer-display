@@ -28,9 +28,10 @@ describe('POST /api/timers/[id]/remove-minute', () => {
     expect(res.status).toBe(409);
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id (default 60s), but 409s removing a minute would hit 0', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await POST({params: {id: 'nope'}});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(409);
+    expect(store.getOne('nope')).toBeDefined();
   });
 });

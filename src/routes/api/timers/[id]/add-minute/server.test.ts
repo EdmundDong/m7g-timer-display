@@ -21,9 +21,10 @@ describe('POST /api/timers/[id]/add-minute', () => {
     expect((await readJson<TimerState>(res)).durationSec).toBe(120);
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id (default 60s) before adding a minute', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await POST({params: {id: 'nope'}});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect((await readJson<TimerState>(res)).durationSec).toBe(120);
   });
 });

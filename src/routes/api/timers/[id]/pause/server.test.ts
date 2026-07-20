@@ -22,10 +22,11 @@ describe('POST /api/timers/[id]/pause', () => {
     expect((await readJson<TimerState>(res)).status).toBe('paused');
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id, but still 409s (idle, not running)', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await POST({params: {id: 'nope'}});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(409);
+    expect(store.getOne('nope')).toBeDefined();
   });
 
   test('returns 409 if not running', async () => {

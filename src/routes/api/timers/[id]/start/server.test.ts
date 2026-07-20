@@ -21,10 +21,11 @@ describe('POST /api/timers/[id]/start', () => {
     expect((await readJson<TimerState>(res)).status).toBe('running');
   });
 
-  test('returns 404 for unknown id', async () => {
+  test('auto-creates an unknown id and starts it (200)', async () => {
     // @ts-expect-error minimal fake RequestEvent
     const res = await POST({params: {id: 'nope'}});
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect((await readJson<TimerState>(res)).status).toBe('running');
   });
 
   test('returns 409 if already running', async () => {
