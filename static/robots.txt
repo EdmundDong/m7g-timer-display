@@ -1,0 +1,3 @@
+# internal broadcast control tool - do not index
+User-agent: *
+Disallow: /
