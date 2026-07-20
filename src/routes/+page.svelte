@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {PageData} from './$types';
-  import type {ErodeFrom, Position, TimerState} from '$lib/types';
+  import type {Position, TimerState} from '$lib/types';
   import {computeRemainingSec, formatMMSS} from '$lib/timerMath';
   import {readJson, type ErrorBody} from '$lib/http';
 
@@ -16,8 +16,7 @@
   let showAdvanced = $state(false);
   let redZoneSec = $state<number | ''>('');
   let disappearSec = $state<number | ''>('');
-  let erodeFrom = $state<ErodeFrom>('left');
-  let position = $state<Position>('top');
+  let position = $state<Position>('bottom');
   let mirror = $state(false);
   let createError = $state('');
 
@@ -27,8 +26,7 @@
     durationSec: 0,
     redZoneSec: 0,
     disappearSec: 0,
-    erodeFrom: 'left',
-    position: 'top',
+    position: 'bottom',
     mirror: false,
   });
   let editError = $state('');
@@ -57,7 +55,6 @@
     if (redZoneSec !== '') body.redZoneSec = redZoneSec;
     if (disappearSec !== '') body.disappearSec = disappearSec;
     if (showAdvanced) {
-      body.erodeFrom = erodeFrom;
       body.position = position;
       body.mirror = mirror;
     }
@@ -74,8 +71,7 @@
     durationSec = 60;
     redZoneSec = '';
     disappearSec = '';
-    erodeFrom = 'left';
-    position = 'top';
+    position = 'bottom';
     mirror = false;
   }
 
@@ -99,7 +95,6 @@
       durationSec: t.durationSec,
       redZoneSec: t.redZoneSec,
       disappearSec: t.disappearSec,
-      erodeFrom: t.erodeFrom,
       position: t.position,
       mirror: t.mirror,
     };
@@ -173,19 +168,10 @@
             <option value="right">right</option>
           </select>
         </label>
-        <div class="erode-mirror-group">
-          <label>
-            Erode from
-            <select bind:value={erodeFrom}>
-              <option value="left">left</option>
-              <option value="right">right</option>
-            </select>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={mirror} />
-            Mirror
-          </label>
-        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={mirror} />
+          Mirror
+        </label>
       </div>
     {/if}
     {#if createError}<p class="error">{createError}</p>{/if}
@@ -269,19 +255,10 @@
                 <option value="right">right</option>
               </select>
             </label>
-            <div class="erode-mirror-group">
-              <label>
-                Erode from
-                <select bind:value={editFields.erodeFrom}>
-                  <option value="left">left</option>
-                  <option value="right">right</option>
-                </select>
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" bind:checked={editFields.mirror} />
-                Mirror
-              </label>
-            </div>
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={editFields.mirror} />
+              Mirror
+            </label>
             <div class="edit-actions">
               <button class="primary" onclick={() => saveEdit(t.id)}>Save</button>
               <button class="ghost" onclick={cancelEdit}>Cancel</button>
@@ -419,12 +396,6 @@
     font-size: 0.8rem;
     color: #aaa;
     gap: 0.3rem;
-  }
-
-  .erode-mirror-group {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-end;
   }
 
   .checkbox-label {

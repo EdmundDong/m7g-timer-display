@@ -44,8 +44,7 @@ function requireOrCreate(id: string): TimerState {
     durationSec: AUTO_CREATE_DEFAULT_DURATION_SEC,
     redZoneSec: 10,
     disappearSec: 10,
-    erodeFrom: 'left',
-    position: 'top',
+    position: 'bottom',
     mirror: false,
     status: 'idle',
     startEpochMs: null,
@@ -78,8 +77,7 @@ export function createTimer(input: CreateTimerInput): TimerState {
     durationSec: input.durationSec,
     redZoneSec: input.redZoneSec ?? 10,
     disappearSec: input.disappearSec ?? 10,
-    erodeFrom: input.erodeFrom ?? 'left',
-    position: input.position ?? 'top',
+    position: input.position ?? 'bottom',
     mirror: input.mirror ?? false,
   } as const;
   validateTimerFields(merged);
@@ -111,7 +109,6 @@ export function patchTimer(id: string, patch: PatchTimerInput): TimerState {
     durationSec: patch.durationSec ?? t.durationSec,
     redZoneSec: patch.redZoneSec ?? t.redZoneSec,
     disappearSec: patch.disappearSec ?? t.disappearSec,
-    erodeFrom: patch.erodeFrom ?? t.erodeFrom,
     position: patch.position ?? t.position,
     mirror: patch.mirror ?? t.mirror,
   };

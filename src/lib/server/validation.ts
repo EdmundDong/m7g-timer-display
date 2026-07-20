@@ -7,7 +7,7 @@ const POSITIONS = ['top', 'bottom', 'left', 'right'];
 export function validateTimerFields(
   fields: Pick<
     TimerState,
-    'name' | 'durationSec' | 'redZoneSec' | 'disappearSec' | 'erodeFrom' | 'position' | 'mirror'
+    'name' | 'durationSec' | 'redZoneSec' | 'disappearSec' | 'position' | 'mirror'
   >,
 ): void {
   if (!fields.name || !fields.name.trim()) {
@@ -27,9 +27,6 @@ export function validateTimerFields(
   }
   if (!Number.isFinite(fields.disappearSec) || fields.disappearSec < 0) {
     throw new ValidationError('disappearSec must be >= 0');
-  }
-  if (fields.erodeFrom !== 'left' && fields.erodeFrom !== 'right') {
-    throw new ValidationError('erodeFrom must be "left" or "right"');
   }
   if (!POSITIONS.includes(fields.position)) {
     throw new ValidationError('position must be "top", "bottom", "left", or "right"');

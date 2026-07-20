@@ -33,7 +33,6 @@ describe('createTimer', () => {
     expect(timer.durationSec).toBe(60);
     expect(timer.redZoneSec).toBe(10);
     expect(timer.disappearSec).toBe(10);
-    expect(timer.erodeFrom).toBe('left');
     expect(timer.mirror).toBe(false);
     expect(timer.status).toBe('idle');
     expect(timer.startEpochMs).toBeNull();
@@ -56,16 +55,15 @@ describe('createTimer', () => {
   });
 
   test('respects explicit overrides', () => {
-    const timer = createDefault({redZoneSec: 5, disappearSec: 3, erodeFrom: 'right', mirror: true});
+    const timer = createDefault({redZoneSec: 5, disappearSec: 3, mirror: true});
     expect(timer.redZoneSec).toBe(5);
     expect(timer.disappearSec).toBe(3);
-    expect(timer.erodeFrom).toBe('right');
     expect(timer.mirror).toBe(true);
   });
 
-  test('defaults position to top', () => {
+  test('defaults position to bottom', () => {
     const timer = createDefault();
-    expect(timer.position).toBe('top');
+    expect(timer.position).toBe('bottom');
   });
 
   test('respects an explicit position override', () => {
@@ -119,11 +117,6 @@ describe('createTimer', () => {
 
   test('rejects negative disappearSec', () => {
     expect(() => createDefault({disappearSec: -1})).toThrow(ValidationError);
-  });
-
-  test('rejects invalid erodeFrom', () => {
-    // @ts-expect-error testing invalid input at runtime
-    expect(() => createDefault({erodeFrom: 'up'})).toThrow(ValidationError);
   });
 });
 
@@ -509,7 +502,7 @@ describe('auto-create on unknown id (for external controllers like Bitfocus Comp
     expect(t.durationSec).toBe(60);
     expect(t.redZoneSec).toBe(10);
     expect(t.disappearSec).toBe(10);
-    expect(t.position).toBe('top');
+    expect(t.position).toBe('bottom');
     expect(t.status).toBe('running');
   });
 

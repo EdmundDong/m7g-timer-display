@@ -5,9 +5,9 @@ API for driving timers from external controllers (e.g. a Bitfocus Companion butt
 
 The vMix source page renders a thin colored strip along one edge of an otherwise fully
 transparent page: green for the first half of the timer, yellow until the last "red zone"
-seconds, red for the red zone. The strip depletes as time passes and disappears entirely
-once the remaining time drops below a configurable threshold. Multiple independent, named
-timers can run at once, each with its own vMix source URL.
+seconds, red for the red zone. The strip depletes as time passes and fades out over a
+couple of seconds once the remaining time drops below a configurable threshold. Multiple
+independent, named timers can run at once, each with its own vMix source URL.
 
 ## Stack
 
@@ -41,20 +41,19 @@ Point vMix's Browser Source input at `http://<host>:<port>/source/<timerId>`. Op
   reusing numbers freed up by deleted timers) and a duration.
 - Start / Pause / Resume / Reset, plus `+1:00` / `−1:00` buttons to adjust the running
   duration on the fly (`−1:00` is disabled once removing a minute would hit 0).
-- Settings (red zone length, disappear threshold, strip position, erode direction, mirror)
-  are editable at any time, including while the timer is running.
+- Settings (red zone length, disappear threshold, strip position, mirror) are editable at
+  any time, including while the timer is running.
 - Each timer has a copyable `/source/<id>` URL for pasting into vMix.
 
 ### Strip placement and direction
 
-- **Position** - which edge of the screen the strip sits against: `top` (default),
-  `bottom`, `left`, or `right`. `top`/`bottom` strips run horizontally; `left`/`right`
+- **Position** - which edge of the screen the strip sits against: `bottom` (default),
+  `top`, `left`, or `right`. `top`/`bottom` strips run horizontally; `left`/`right`
   strips run vertically along that edge.
-- **Erode from** - which end of the strip's own timeline the elapsed portion disappears
-  from first (`left`/`right` for horizontal strips, mapped to `top`/`bottom` for vertical
-  ones).
-- **Mirror** - flips the strip's timeline (which end is green vs. red, and which end it
-  erodes from). It does **not** change which screen edge the strip is anchored to - that's
+- **Mirror** - flips the strip's timeline: which end erodes away first, and which end is
+  green vs. red. Baseline (unmirrored) erodes from the strip's "start" edge (left for
+  horizontal strips, top for vertical ones), with green painted there and red at the far
+  end. Mirror does **not** change which screen edge the strip is anchored to - that's
   controlled by Position alone.
 
 ## API
@@ -63,24 +62,24 @@ All endpoints are plain JSON over HTTP, no authentication. `id` is a URL-safe sl
 from the timer's name at creation time (e.g. "Lower Third" -> `lower-third`) and never
 changes afterward, even if the timer is renamed later.
 
-| Method | Path                            | Body                                                                               | Notes                                                                                      |
-| ------ | ------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| GET    | `/api/timers`                   | -                                                                                  | List all timers                                                                            |
-| POST   | `/api/timers`                   | `{name?, durationSec, redZoneSec?, disappearSec?, erodeFrom?, position?, mirror?}` | Create a timer. 409 if the derived id is already in use                                    |
-| PATCH  | `/api/timers/:id`               | Any subset of the same fields                                                      | Auto-creates `:id` if it doesn't exist yet (see below)                                     |
-| DELETE | `/api/timers/:id`               | -                                                                                  | 404 if `:id` doesn't exist - **not** auto-created                                          |
-| POST   | `/api/timers/:id/start`         | -                                                                                  | Auto-creates `:id` if unknown, then starts it                                              |
-| POST   | `/api/timers/:id/pause`         | -                                                                                  | Auto-creates `:id` if unknown (409, since a fresh timer isn't running)                     |
-| POST   | `/api/timers/:id/resume`        | -                                                                                  | Auto-creates `:id` if unknown (409, since a fresh timer isn't paused)                      |
-| POST   | `/api/timers/:id/reset`         | -                                                                                  | Auto-creates `:id` if unknown                                                              |
-| POST   | `/api/timers/:id/add-minute`    | -                                                                                  | Auto-creates `:id` if unknown, adds 60s to the duration                                    |
-| POST   | `/api/timers/:id/remove-minute` | -                                                                                  | Auto-creates `:id` if unknown; 409 if removing 60s would hit 0                             |
-| GET    | `/api/timers/stream`            | -                                                                                  | Server-Sent Events, full timer list on every change (console)                              |
-| GET    | `/api/timers/:id/stream`        | -                                                                                  | Server-Sent Events, single timer (vMix source page). 404 if unknown - **not** auto-created |
+| Method | Path                            | Body                                                                   | Notes                                                                                      |
+| ------ | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| GET    | `/api/timers`                   | -                                                                      | List all timers                                                                            |
+| POST   | `/api/timers`                   | `{name?, durationSec, redZoneSec?, disappearSec?, position?, mirror?}` | Create a timer. 409 if the derived id is already in use                                    |
+| PATCH  | `/api/timers/:id`               | Any subset of the same fields                                          | Auto-creates `:id` if it doesn't exist yet (see below)                                     |
+| DELETE | `/api/timers/:id`               | -                                                                      | 404 if `:id` doesn't exist - **not** auto-created                                          |
+| POST   | `/api/timers/:id/start`         | -                                                                      | Auto-creates `:id` if unknown, then starts it                                              |
+| POST   | `/api/timers/:id/pause`         | -                                                                      | Auto-creates `:id` if unknown (409, since a fresh timer isn't running)                     |
+| POST   | `/api/timers/:id/resume`        | -                                                                      | Auto-creates `:id` if unknown (409, since a fresh timer isn't paused)                      |
+| POST   | `/api/timers/:id/reset`         | -                                                                      | Auto-creates `:id` if unknown                                                              |
+| POST   | `/api/timers/:id/add-minute`    | -                                                                      | Auto-creates `:id` if unknown, adds 60s to the duration                                    |
+| POST   | `/api/timers/:id/remove-minute` | -                                                                      | Auto-creates `:id` if unknown; 409 if removing 60s would hit 0                             |
+| GET    | `/api/timers/stream`            | -                                                                      | Server-Sent Events, full timer list on every change (console)                              |
+| GET    | `/api/timers/:id/stream`        | -                                                                      | Server-Sent Events, single timer (vMix source page). 404 if unknown - **not** auto-created |
 
 **Auto-create on unknown id:** every endpoint above except `DELETE` and the per-timer
 `stream` will create a timer named after `:id` (title-cased, e.g. `lower-third-1` ->
-"Lower Third 1") with default settings (60s duration, 10s red zone, 10s disappear, top
+"Lower Third 1") with default settings (60s duration, 10s red zone, 10s disappear, bottom
 position) if `:id` doesn't already exist, then proceed with the requested action. This
 means an external controller can drive timers purely by id without the operator creating
 them in the console first.
