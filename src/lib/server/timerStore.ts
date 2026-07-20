@@ -45,6 +45,7 @@ function requireOrCreate(id: string): TimerState {
     redZoneSec: 10,
     disappearSec: 10,
     erodeFrom: 'left',
+    position: 'top',
     mirror: false,
     status: 'idle',
     startEpochMs: null,
@@ -78,6 +79,7 @@ export function createTimer(input: CreateTimerInput): TimerState {
     redZoneSec: input.redZoneSec ?? 10,
     disappearSec: input.disappearSec ?? 10,
     erodeFrom: input.erodeFrom ?? 'left',
+    position: input.position ?? 'top',
     mirror: input.mirror ?? false,
   } as const;
   validateTimerFields(merged);
@@ -110,6 +112,7 @@ export function patchTimer(id: string, patch: PatchTimerInput): TimerState {
     redZoneSec: patch.redZoneSec ?? t.redZoneSec,
     disappearSec: patch.disappearSec ?? t.disappearSec,
     erodeFrom: patch.erodeFrom ?? t.erodeFrom,
+    position: patch.position ?? t.position,
     mirror: patch.mirror ?? t.mirror,
   };
   validateTimerFields(merged);

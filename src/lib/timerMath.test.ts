@@ -16,6 +16,7 @@ function makeTimer(overrides: Partial<TimerState> = {}): TimerState {
     redZoneSec: 10,
     disappearSec: 10,
     erodeFrom: 'left',
+    position: 'top',
     mirror: false,
     status: 'idle',
     startEpochMs: null,

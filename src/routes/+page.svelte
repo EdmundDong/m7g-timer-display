@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {PageData} from './$types';
-  import type {ErodeFrom, TimerState} from '$lib/types';
+  import type {ErodeFrom, Position, TimerState} from '$lib/types';
   import {computeRemainingSec, formatMMSS} from '$lib/timerMath';
   import {readJson, type ErrorBody} from '$lib/http';
 
@@ -17,6 +17,7 @@
   let redZoneSec = $state<number | ''>('');
   let disappearSec = $state<number | ''>('');
   let erodeFrom = $state<ErodeFrom>('left');
+  let position = $state<Position>('top');
   let mirror = $state(false);
   let createError = $state('');
 
@@ -27,6 +28,7 @@
     redZoneSec: 0,
     disappearSec: 0,
     erodeFrom: 'left',
+    position: 'top',
     mirror: false,
   });
   let editError = $state('');
@@ -56,6 +58,7 @@
     if (disappearSec !== '') body.disappearSec = disappearSec;
     if (showAdvanced) {
       body.erodeFrom = erodeFrom;
+      body.position = position;
       body.mirror = mirror;
     }
     const res = await fetch('/api/timers', {
@@ -72,6 +75,7 @@
     redZoneSec = '';
     disappearSec = '';
     erodeFrom = 'left';
+    position = 'top';
     mirror = false;
   }
 
@@ -96,6 +100,7 @@
       redZoneSec: t.redZoneSec,
       disappearSec: t.disappearSec,
       erodeFrom: t.erodeFrom,
+      position: t.position,
       mirror: t.mirror,
     };
   }
@@ -158,6 +163,15 @@
         <label>
           Disappear at (sec, default 10)
           <input type="number" min="0" bind:value={disappearSec} placeholder="10" />
+        </label>
+        <label>
+          Position
+          <select bind:value={position}>
+            <option value="top">top</option>
+            <option value="bottom">bottom</option>
+            <option value="left">left</option>
+            <option value="right">right</option>
+          </select>
         </label>
         <div class="erode-mirror-group">
           <label>
@@ -245,6 +259,15 @@
             <label>
               Disappear at (sec)
               <input type="number" min="0" bind:value={editFields.disappearSec} />
+            </label>
+            <label>
+              Position
+              <select bind:value={editFields.position}>
+                <option value="top">top</option>
+                <option value="bottom">bottom</option>
+                <option value="left">left</option>
+                <option value="right">right</option>
+              </select>
             </label>
             <div class="erode-mirror-group">
               <label>

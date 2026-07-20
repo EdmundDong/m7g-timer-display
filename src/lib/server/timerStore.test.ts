@@ -63,6 +63,21 @@ describe('createTimer', () => {
     expect(timer.mirror).toBe(true);
   });
 
+  test('defaults position to top', () => {
+    const timer = createDefault();
+    expect(timer.position).toBe('top');
+  });
+
+  test('respects an explicit position override', () => {
+    const timer = createDefault({position: 'left'});
+    expect(timer.position).toBe('left');
+  });
+
+  test('rejects an invalid position', () => {
+    // @ts-expect-error testing invalid input at runtime
+    expect(() => createDefault({position: 'diagonal'})).toThrow(ValidationError);
+  });
+
   test('blank name is auto-assigned Timer1', () => {
     const timer = createDefault({name: ''});
     expect(timer.name).toBe('Timer1');
@@ -258,6 +273,12 @@ describe('patchTimer', () => {
     const patched = store.patchTimer(t.id, {name: 'Renamed', redZoneSec: 15});
     expect(patched.name).toBe('Renamed');
     expect(patched.redZoneSec).toBe(15);
+  });
+
+  test('updates position', () => {
+    const t = createDefault();
+    const patched = store.patchTimer(t.id, {position: 'right'});
+    expect(patched.position).toBe('right');
   });
 
   test('renaming via patch does not change the (URL-facing) id', () => {
@@ -488,6 +509,7 @@ describe('auto-create on unknown id (for external controllers like Bitfocus Comp
     expect(t.durationSec).toBe(60);
     expect(t.redZoneSec).toBe(10);
     expect(t.disappearSec).toBe(10);
+    expect(t.position).toBe('top');
     expect(t.status).toBe('running');
   });
 
