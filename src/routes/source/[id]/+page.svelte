@@ -15,6 +15,7 @@
   const COLOR_HEX = {green: '#2ecc40', yellow: '#ffdc00', red: '#ff4136'} as const;
 
   let timer = $state<TimerState | null>(null);
+  let deleted = $state(false);
   let now = $state(Date.now());
 
   $effect(() => {
@@ -23,7 +24,9 @@
       timer = JSON.parse(e.data as string) as TimerState;
     });
     es.addEventListener('deleted', () => {
-      timer = null;
+      // keep the last-known timer around so width/colors don't collapse instantly -
+      // `hidden` (below) picks this up and fades the strip out the same way it fades in.
+      deleted = true;
     });
 
     let rafId = requestAnimationFrame(function loop() {
@@ -39,7 +42,7 @@
 
   let remainingSec = $derived(timer ? computeRemainingSec(timer, now) : 0);
   let visiblePct = $derived(timer ? computeVisiblePct(remainingSec, timer.durationSec) : 0);
-  let hidden = $derived(!timer || isDisappeared(remainingSec, timer.disappearSec));
+  let hidden = $derived(deleted || !timer || isDisappeared(remainingSec, timer.disappearSec));
   let segments = $derived(timer ? computeColorSegments(timer.durationSec, timer.redZoneSec) : []);
   let mirror = $derived(timer?.mirror ?? false);
   let position = $derived(timer?.position ?? 'bottom');
